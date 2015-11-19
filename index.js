@@ -61,38 +61,49 @@ KDB.prototype.insert = function (pt, value) {
     } else if (node.type === POINTS) {
       if (node.points.length < self.a) {
         node.points.push({ point: pt, value: value })
-      } else pointOverflow(node, pt, parents)
+        return
+      }
+      var coords = []
+      var axis = (parents.length + 1) % pt.length
+      for (var i = 0; i < node.points.length; i++) {
+        coords.push(node.points[i][axis])
+      }
+      var pivot = median(coords)
+      if (parents[0].node.regions.length === self.b) {
+        for (var i = 0; i < parents.length
+        && parents[i].node.regions.length === self.b; i++);
+        var right = splitRegionNode(parents[i].node, pivot, axis)
+        parents[i].regions.push(right)
+        insert(parents[i].node, parents.slice(i+1))
+      } else {
+        var right = splitPointNode(node, pivot, axis)
+        var pnode = parents[0].node
+        var pindex = parents[0].index
+        var lrange = [pnode.regions[pindex].range[0],pivot]
+        var rrange = [pivot,pnode.regions[pindex].range[1]]
+        var lregion = { axis: axis, range: lrange, node: node }
+        var rregion = { axis: axis, range: rrange, node: right }
+        parents[0].node.regions[pindex] = lregion
+        parents[0].node.regions.push(rregion)
+        insert(parents[0].node, parents.slice(1))
+      }
     }
   }
 
-  function pointOverflow (node, pt, parents) {
-    // point overflow
-    var axis = parents.length % pt.length
-    var coords = []
-    for (var i = 0; i < node.points.length; i++) {
-      coords.push(node.points[i][axis])
-    }
-    var pivot = median(coords)
-    var left = { type: POINTS, points: [] }
+  function splitPointNode (node, pivot, axis) {
     var right = { type: POINTS, points: [] }
-    if (pt[axis] < pivot) left.points.push(rec)
-    else right.points.push(rec)
-
     for (var i = 0; i < node.points.length; i++) {
       var p = node.points[i]
-      if (p.point[axis] < pivot) left.points.push(p)
-      else right.points.push(p)
+      if (p.point[axis] >= pivot) {
+        right.points.push(p)
+        node.points.splice(i, 1)
+        i--
+      }
     }
-    if (parents[0].node.regions.length >= self.b) {
-      throw new Error('region overflow...')
-    }
-    var pnode = parents[0].node
-    var pindex = parents[0].index
-    var lrange = [pnode.regions[pindex].range[0],pivot]
-    var rrange = [pivot,pnode.regions[pindex].range[1]]
-    var lregion = { axis: axis, range: lrange, node: left }
-    var rregion = { axis: axis, range: rrange, node: right }
-    pnode.regions.splice(pindex, 1, lregion, rregion)
+    return right
+  }
+  function splitRegionNode (node, pivot, axis) {
+    throw new Error('todo')
   }
 }
 
