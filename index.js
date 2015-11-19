@@ -1,6 +1,7 @@
-module.exports = KDB
-
+var median = require('median')
 var REGION = 0, POINTS = 1
+
+module.exports = KDB
 
 function KDB (opts) {
   if (!(this instanceof KDB)) return new KDB(opts)
@@ -52,7 +53,7 @@ KDB.prototype.insert = function (pt, value) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlapping(q, r.range)) {
+        if (overlappingRange(q, r.range)) {
           var nparents = [{ node: node, index: i }].concat(parents)
           return insert(r.node, nparents)
         }
