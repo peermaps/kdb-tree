@@ -23,12 +23,13 @@ function KDB (opts) {
 }
 
 KDB.prototype.query = function (q) {
+  if (!Array.isArray(q[0])) q = q.map(function (x) { return [x,x] })
   return (function query (node) {
     var results = []
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlappingRange(q, r.range)) {
+        if (overlapping(q[r.axis], r.range)) {
           results.push.apply(results, query(r.node))
         }
       }
@@ -49,11 +50,10 @@ KDB.prototype.insert = function (pt, value) {
   return insert(this.root, [])
 
   function insert (node, parents) {
-    var depth = parents.length
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlappingRange(q, r.range)) {
+        if (overlapping(q[r.axis], r.range)) {
           var nparents = [{ node: node, index: i }].concat(parents)
           return insert(r.node, nparents)
         }
@@ -61,13 +61,13 @@ KDB.prototype.insert = function (pt, value) {
     } else if (node.type === POINTS) {
       if (node.points.length < self.a) {
         node.points.push({ point: pt, value: value })
-      } else pointOverflow(pt, parents)
+      } else pointOverflow(node, pt, parents)
     }
   }
 
-  function pointOverflow (pt, parents) {
+  function pointOverflow (node, pt, parents) {
     // point overflow
-    var axis = depth % pt.length
+    var axis = parents.length % pt.length
     var coords = []
     for (var i = 0; i < node.points.length; i++) {
       coords.push(node.points[i][axis])
@@ -96,22 +96,21 @@ KDB.prototype.insert = function (pt, value) {
   }
 }
 
-function overlappingRange (a, b) {
-  for (var i = 0; i < a.length; i++) {
-    if (!overlapping2d(a[i][0], a[i][1], b[i][0], b[i][1])) return false
-  }
-  return true
-}
-
 function overlappingPoint (a, p) {
   for (var i = 0; i < a.length; i++) {
-    if (!overlapping2d(a[i][0], a[i][1], p[i], p[i])) return false
+    if (!overlappingmm(a[i][0], a[i][1], p[i], p[i])) return false
   }
   return true
 }
 
-function overlapping2d (amin, amax, bmin, bmax) {
+function overlappingmm (amin, amax, bmin, bmax) {
   return (amin >= bmin && amin <= bmax)
     || (amax >= bmin && amax <= bmax)
     || (amin < bmin && amax > bmax)
+}
+
+function overlapping (a, b) {
+  return (a[0] >= b[0] && a[0] <= b[1])
+    || (a[1] >= b[0] && a[1] <= b[1])
+    || (a[0] < b[0] && a[1] > b[1])
 }
