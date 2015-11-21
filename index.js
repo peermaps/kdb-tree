@@ -66,12 +66,13 @@ KDB.prototype.insert = function (pt, value) {
       var coords = []
       var axis = (parents.length + 1) % pt.length
       for (var i = 0; i < node.points.length; i++) {
-        coords.push(node.points[i][axis])
+        coords.push(node.points[i].point[axis])
       }
       var pivot = median(coords)
       if (parents[0].node.regions.length === self.b) {
         for (var i = 0; i < parents.length
         && parents[i].node.regions.length === self.b; i++);
+        i -= 1
         var right = splitRegionNode(parents[i].node, pivot, axis)
         parents[i].regions.push(right)
         insert(parents[i].node, parents.slice(i+1))
