@@ -7,18 +7,22 @@ function KDB (opts) {
   if (!(this instanceof KDB)) return new KDB(opts)
   this.a  = 4 // points
   this.b  = 3 // regions
+  this.dim = opts.dim
   this.root = {
     type: REGION,
     regions: [
       {
         axis: 0,
-        range: [-Infinity,Infinity],
+        range: [],
         node: {
           type: POINTS,
           points: []
         }
       }
     ]
+  }
+  for (var i = 0; i < this.dim; i++) {
+    this.root.regions[0].range.push([-Infinity,Infinity])
   }
 }
 
@@ -29,7 +33,7 @@ KDB.prototype.query = function (q) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlapping(q[r.axis], r.range)) {
+        if (overlapping(q[r.axis], r.range[r.axis])) {
           results.push.apply(results, query(r.node))
         }
       }
@@ -53,7 +57,7 @@ KDB.prototype.insert = function (pt, value) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlapping(q[r.axis], r.range)) {
+        if (overlapping(q[r.axis], r.range[r.axis])) {
           var nparents = [{ node: node, index: i }].concat(parents)
           return insert(r.node, nparents)
         }
@@ -80,8 +84,10 @@ KDB.prototype.insert = function (pt, value) {
         var right = splitPointNode(node, pivot, axis)
         var pnode = parents[0].node
         var pindex = parents[0].index
-        var lrange = [pnode.regions[pindex].range[0],pivot]
-        var rrange = [pivot,pnode.regions[pindex].range[1]]
+        var lrange = pnode.regions[pindex].range.slice()
+        lrange[axis][1] = pivot
+        var rrange = pnode.regions[pindex].range.slice()
+        rrange[axis][0] = pivot
         var lregion = { axis: axis, range: lrange, node: node }
         var rregion = { axis: axis, range: rrange, node: right }
         parents[0].node.regions[pindex] = lregion
@@ -104,7 +110,47 @@ KDB.prototype.insert = function (pt, value) {
     return right
   }
   function splitRegionNode (node, pivot, axis) {
-    throw new Error('todo')
+    var rrange = node.range.slice()
+    rrange[axis] = [ pivot, node.range[axis][1] ]
+
+    var right = {
+      axis: axis,
+      range: rrange,
+      node: {
+        type: REGION,
+        regions: []
+      }
+    }
+    var left = node
+    left.range[axis][1] = pivot
+
+    for (var i = 0; i < node.regions.length; i++) {
+      var r = node.regions[i]
+      if (r.range[axis][1] <= pivot) {
+        right.regions.push(r)
+        left.regions.splice(i, 1)
+        i--
+      } else if (r.range[axis][0] >= pivot) {
+        // already in the right place
+      } else {
+        var rright = {
+          axis: axis,
+          range: r.range.slice()
+        }
+        rright.range[axis][0] = pivot
+        right.regions.push(rright)
+
+        var rleft = r
+        rleft.range[axis][1] = pivot
+
+        if (r.node.type === POINTS) {
+          rright.node = splitPointNode(r.node, pivot, axis)
+        } else if (r.node.type === REGION) {
+          rright.node = splitRegionNode(r.node, pivot, axis)
+        } else throw new Error('unknown type: ' + pp.type)
+      }
+    }
+    return right
   }
 }
 

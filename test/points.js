@@ -3,7 +3,7 @@ var test = require('tape')
 
 test('points', function (t) {
   var n = 20
-  var kdb = kdbtree()
+  var kdb = kdbtree({ dim: 3 })
   var data = []
   for (var i = 0; i < n; i++) {
     var x = Math.random() * 200 - 100
