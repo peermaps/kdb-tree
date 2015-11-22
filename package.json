@@ -1,0 +1,21 @@
+{
+  "name": "kdb-tree",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "median": "^0.0.2"
+  },
+  "devDependencies": {
+    "tape": "^4.2.2"
+  },
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "keywords": [],
+  "author": "substack",
+  "license": "BSD"
+}
