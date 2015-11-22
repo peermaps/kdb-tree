@@ -48,6 +48,7 @@ KDB.prototype.query = function (q) {
 }
 
 KDB.prototype.insert = function (pt, value) {
+  console.log('INSERT', pt)
   var self = this
   var q = [], rec = { point: pt, value: value }
   for (var i = 0; i < pt.length; i++) q.push([pt[i],pt[i]])
@@ -66,6 +67,7 @@ KDB.prototype.insert = function (pt, value) {
     } else if (node.type === POINTS) {
       if (node.points.length < self.a) {
         node.points.push({ point: pt, value: value })
+        console.log('+INSERTED')
         return
       }
       var coords = []
@@ -99,6 +101,7 @@ KDB.prototype.insert = function (pt, value) {
   }
 
   function splitPointNode (node, pivot, axis) {
+    console.log('SPLIT POINT')
     var right = { type: POINTS, points: [] }
     for (var i = 0; i < node.points.length; i++) {
       var p = node.points[i]
@@ -111,6 +114,7 @@ KDB.prototype.insert = function (pt, value) {
     return right
   }
   function splitRegionNode (node, pivot, axis) {
+    console.log('SPLIT REGION')
     var rrange = regionRange(self.dim, node.node.regions)
     rrange[axis][0] = pivot
 
@@ -127,12 +131,15 @@ KDB.prototype.insert = function (pt, value) {
     for (var i = 0; i < node.node.regions.length; i++) {
       var r = node.node.regions[i]
       if (r.range[axis][1] <= pivot) {
+        console.log(' + LEFT')
+        // already in the right place
+      } else if (r.range[axis][0] >= pivot) {
+        console.log(' + RIGHT')
         right.node.regions.push(r)
         left.node.regions.splice(i, 1)
         i--
-      } else if (r.range[axis][0] >= pivot) {
-        // already in the right place
       } else {
+        console.log(' + RECURSE')
         var rright = {
           axis: axis,
           range: clone(r.range)

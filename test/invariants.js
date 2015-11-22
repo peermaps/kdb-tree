@@ -14,7 +14,9 @@ test('invariants', function (t) {
     kdb.insert([x,y,z],loc)
     var pts = kdb.query([x,y,z])
     t.deepEqual(pts, [ { point: [x,y,z], value: loc } ])
-    t.ok(invariants(kdb.root), 'invariants')
+    var ok = invariants(kdb.root)
+    t.ok(ok, 'invariants')
+    if (!ok) console.log(require('util').inspect(kdb.root,0,2000))
   }
 
   var pts = kdb.query([[15,50],[-60,10],[50,100]])
@@ -29,19 +31,30 @@ test('invariants', function (t) {
 })
 
 function invariants (tree) {
+  if (!tree.regions) {
+    console.log('!!! no regions for:', tree)
+    return false
+  }
   return tree.regions.every(function (r) {
     if (r.node.type === 0) {
-      r.node.regions.every(function (cr) {
+      return r.node.regions.every(function (cr) {
         return cr.range.every(function (rr, i) {
-          return rr[0] >= r.range[i][0] && rr[0] <= r.range[i][1]
-            && rr[1] >= r.range[i][0] && rr[1] <= r.range[i][1]
-            && (cr.node.type === 1 || invariants(cr.node))
+          var ok = r.range[i][0] <= rr[0] && rr[0] <= r.range[i][1]
+            && r.range[i][0] <= rr[1] && rr[1] <= r.range[i][1]
+          var subok = cr.node.type === 1 || invariants(cr.node)
+          if (!ok) console.log('!!!cmp-r',
+            r.range[i][0], '<=', rr[0], '<=', r.range[i][1],
+            'and',
+            r.range[i][0], '<=', rr[1], '<=', r.range[i][1])
+          return ok && subok
         })
       })
     } else if (r.node.type === 1) {
       return r.node.points.every(function (p) {
         return p.point.every(function (x, i) {
-          return x >= r.range[i][0] && x <= r.range[i][1]
+          var ok = x >= r.range[i][0] && x <= r.range[i][1]
+          if (!ok) console.log('!!!cmp-p', r.range[i][0], '<=', x, '<=', r.range[i][1])
+          return ok
         })
       })
     } else return false
