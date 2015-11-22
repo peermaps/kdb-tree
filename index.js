@@ -12,7 +12,6 @@ function KDB (opts) {
     type: REGION,
     regions: [
       {
-        axis: 0,
         range: [],
         node: {
           type: POINTS,
@@ -91,8 +90,8 @@ KDB.prototype.insert = function (pt, value) {
         var rrange = clone(pnode.regions[pindex].range)
         lrange[axis][1] = pivot
         rrange[axis][0] = pivot
-        var lregion = { axis: axis, range: lrange, node: node }
-        var rregion = { axis: axis, range: rrange, node: right }
+        var lregion = { range: lrange, node: node }
+        var rregion = { range: rrange, node: right }
         parents[0].node.regions[pindex] = lregion
         parents[0].node.regions.push(rregion)
         insert(parents[0].node, parents.slice(1))
@@ -119,7 +118,6 @@ KDB.prototype.insert = function (pt, value) {
     rrange[axis][0] = pivot
 
     var right = {
-      axis: axis,
       range: rrange,
       node: {
         type: REGION,
@@ -141,7 +139,6 @@ KDB.prototype.insert = function (pt, value) {
       } else {
         console.log(' + RECURSE')
         var rright = {
-          axis: axis,
           range: clone(r.range)
         }
         rright.range[axis][0] = pivot
