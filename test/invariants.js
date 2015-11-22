@@ -2,7 +2,7 @@ var kdbtree = require('../')
 var test = require('tape')
 
 test('invariants', function (t) {
-  var n = 200
+  var n = 50
   var kdb = kdbtree({ dim: 3 })
   var data = []
   for (var i = 0; i < n; i++) {
