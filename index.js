@@ -77,16 +77,16 @@ KDB.prototype.insert = function (pt, value) {
         for (var i = 0; i < parents.length
         && parents[i].node.regions.length === self.b; i++);
         i -= 1
-        var right = splitRegionNode(parents[i].node, pivot, axis)
-        parents[i].regions.push(right)
+        var right = splitRegionNode(parents[i], pivot, axis)
+        parents[i].node.regions.push(right)
         insert(parents[i].node, parents.slice(i+1))
       } else {
         var right = splitPointNode(node, pivot, axis)
         var pnode = parents[0].node
         var pindex = parents[0].index
-        var lrange = pnode.regions[pindex].range.slice()
+        var lrange = clone(pnode.regions[pindex].range)
+        var rrange = clone(pnode.regions[pindex].range)
         lrange[axis][1] = pivot
-        var rrange = pnode.regions[pindex].range.slice()
         rrange[axis][0] = pivot
         var lregion = { axis: axis, range: lrange, node: node }
         var rregion = { axis: axis, range: rrange, node: right }
@@ -110,8 +110,8 @@ KDB.prototype.insert = function (pt, value) {
     return right
   }
   function splitRegionNode (node, pivot, axis) {
-    var rrange = node.range.slice()
-    rrange[axis] = [ pivot, node.range[axis][1] ]
+    var rrange = regionRange(self.dim, node.node.regions)
+    rrange[axis][0] = pivot
 
     var right = {
       axis: axis,
@@ -122,23 +122,22 @@ KDB.prototype.insert = function (pt, value) {
       }
     }
     var left = node
-    left.range[axis][1] = pivot
 
-    for (var i = 0; i < node.regions.length; i++) {
-      var r = node.regions[i]
+    for (var i = 0; i < node.node.regions.length; i++) {
+      var r = node.node.regions[i]
       if (r.range[axis][1] <= pivot) {
-        right.regions.push(r)
-        left.regions.splice(i, 1)
+        right.node.regions.push(r)
+        left.node.regions.splice(i, 1)
         i--
       } else if (r.range[axis][0] >= pivot) {
         // already in the right place
       } else {
         var rright = {
           axis: axis,
-          range: r.range.slice()
+          range: clone(r.range)
         }
         rright.range[axis][0] = pivot
-        right.regions.push(rright)
+        right.node.regions.push(rright)
 
         var rleft = r
         rleft.range[axis][1] = pivot
@@ -146,9 +145,13 @@ KDB.prototype.insert = function (pt, value) {
         if (r.node.type === POINTS) {
           rright.node = splitPointNode(r.node, pivot, axis)
         } else if (r.node.type === REGION) {
-          rright.node = splitRegionNode(r.node, pivot, axis)
+          rright.node = splitRegionNode(r, pivot, axis)
         } else throw new Error('unknown type: ' + pp.type)
       }
+    }
+    for (var i = 0; i < left.node.regions.length; i++) {
+      var r = left.node.regions[i]
+      r.range[axis][1] = pivot
     }
     return right
   }
@@ -171,4 +174,22 @@ function overlapping (a, b) {
   return (a[0] >= b[0] && a[0] <= b[1])
     || (a[1] >= b[0] && a[1] <= b[1])
     || (a[0] < b[0] && a[1] > b[1])
+}
+
+function clone (xs) {
+  return xs.map(function (x) { return x.slice() })
+}
+
+function regionRange (dim, regions) {
+  var range = []
+  for (var j = 0; j < dim; j++) {
+    var r0 = regions[0].range
+    range[j] = [r0[0],r0[1]]
+    for (var i = 1; i < regions.length; i++) {
+      var r = regions[i].range
+      if (r[j][0] < range[j][0]) range[j][0] = r[j][0]
+      if (r[j][1] > range[j][1]) range[j][1] = r[j][1]
+    }
+  }
+  return range
 }
