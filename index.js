@@ -149,10 +149,12 @@ KDB.prototype.insert = function (pt, value) {
         } else throw new Error('unknown type: ' + pp.type)
       }
     }
+    /*
     for (var i = 0; i < left.node.regions.length; i++) {
       var r = left.node.regions[i]
       r.range[axis][1] = pivot
     }
+    */
     return right
   }
 }
@@ -183,7 +185,9 @@ function clone (xs) {
 function regionRange (dim, regions) {
   var range = []
   for (var j = 0; j < dim; j++) {
-    var r0 = regions[0].range
+    var r0 = regions.length === 0
+      ? [-Infinity,Infinity]
+      : regions[0].range[j]
     range[j] = [r0[0],r0[1]]
     for (var i = 1; i < regions.length; i++) {
       var r = regions[i].range
