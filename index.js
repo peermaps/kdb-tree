@@ -33,7 +33,7 @@ KDB.prototype.query = function (q) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlapping(q[r.axis], r.range[r.axis])) {
+        if (overlappingRange(q, r.range)) {
           results.push.apply(results, query(r.node))
         }
       }
@@ -58,7 +58,7 @@ KDB.prototype.insert = function (pt, value) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
-        if (overlapping(q[r.axis], r.range[r.axis])) {
+        if (overlappingRange(q, r.range)) {
           var nparents = [{ node: node, index: i }].concat(parents)
           return insert(r.node, nparents)
         }
@@ -153,8 +153,11 @@ KDB.prototype.insert = function (pt, value) {
         if (r.node.type === POINTS) {
           rright.node = splitPointNode(r.node, pivot, axis)
         } else if (r.node.type === REGION) {
-          rright.node = splitRegionNode(r, pivot, axis)
-        } else throw new Error('unknown type: ' + pp.type)
+          rright.node = {
+            type: REGION,
+            regions: [ splitRegionNode(r, pivot, axis) ]
+          }
+        } else throw new Error('unknown type: ' + r.node.type)
       }
     }
     for (var i = 0; i < left.node.regions.length; i++) {
@@ -180,6 +183,13 @@ function overlappingmm (amin, amax, bmin, bmax) {
   return (amin >= bmin && amin <= bmax)
     || (amax >= bmin && amax <= bmax)
     || (amin < bmin && amax > bmax)
+}
+
+function overlappingRange (a, b) {
+  for (var i = 0; i < a.length; i++) {
+    if (!overlapping(a[i], b[i])) return false
+  }
+  return true
 }
 
 function overlapping (a, b) {
