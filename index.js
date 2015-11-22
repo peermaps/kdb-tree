@@ -160,14 +160,6 @@ KDB.prototype.insert = function (pt, value) {
         } else throw new Error('unknown type: ' + r.node.type)
       }
     }
-    for (var i = 0; i < left.node.regions.length; i++) {
-      var r = left.node.regions[i]
-      r.range[axis][1] = pivot
-    }
-    for (var i = 0; i < right.node.regions.length; i++) {
-      var r = right.node.regions[i]
-      r.range[axis][0] = pivot
-    }
     return right
   }
 }
