@@ -33,6 +33,8 @@ var kdbtree = require('kdb-tree')
 ## var kdb = kdbtree(opts)
 
 * `opts.dim` - dimension to use for points (required)
+* `opts.a` - number of points per page (default: 4)
+* `opts.b` - number of regions per page (default: 3)
 
 ## kdb.insert(pt, value)
 

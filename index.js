@@ -5,8 +5,8 @@ module.exports = KDB
 
 function KDB (opts) {
   if (!(this instanceof KDB)) return new KDB(opts)
-  this.a  = 4 // points
-  this.b  = 3 // regions
+  this.a  = opts.a || 4 // points
+  this.b  = opts.b || 3 // regions
   this.dim = opts.dim
   this.root = {
     type: REGION,
