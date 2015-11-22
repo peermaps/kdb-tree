@@ -62,6 +62,7 @@ KDB.prototype.insert = function (pt, value) {
           return insert(r.node, nparents)
         }
       }
+      throw new Error('INVALID STATE')
     } else if (node.type === POINTS) {
       if (node.points.length < self.a) {
         node.points.push({ point: pt, value: value })
@@ -149,12 +150,14 @@ KDB.prototype.insert = function (pt, value) {
         } else throw new Error('unknown type: ' + pp.type)
       }
     }
-    /*
     for (var i = 0; i < left.node.regions.length; i++) {
       var r = left.node.regions[i]
       r.range[axis][1] = pivot
     }
-    */
+    for (var i = 0; i < right.node.regions.length; i++) {
+      var r = right.node.regions[i]
+      r.range[axis][0] = pivot
+    }
     return right
   }
 }
