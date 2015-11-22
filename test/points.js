@@ -2,7 +2,7 @@ var kdbtree = require('../')
 var test = require('tape')
 
 test('points', function (t) {
-  var n = 20
+  var n = 200
   var kdb = kdbtree({ dim: 3 })
   var data = []
   for (var i = 0; i < n; i++) {
@@ -23,6 +23,12 @@ test('points', function (t) {
       && pt[1] >= -60 && pt[1] <= 10
       && pt[2] >= 50 && pt[2] <= 100
   })
-  t.deepEqual(pts, expected)
+  t.deepEqual(pts.sort(ptcmp), expected.sort(ptcmp))
   t.end()
 })
+
+function ptcmp (a, b) {
+  var sa = JSON.stringify(a)
+  var sb = JSON.stringify(b)
+  return sa < sb ? -1 : 1
+}
