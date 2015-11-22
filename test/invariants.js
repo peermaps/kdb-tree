@@ -43,6 +43,10 @@ function invariants (tree) {
   }
   return tree.regions.every(function (r) {
     if (r.node.type === 0) {
+      if (r.node.regions.length > 3) {
+        console.log('!!! too many regions: ' + r.node.regions.length)
+        return false
+      }
       return r.node.regions.every(function (cr) {
         return cr.range.every(function (rr, i) {
           var ok = r.range[i][0] <= rr[0] && rr[0] <= r.range[i][1]
@@ -56,6 +60,10 @@ function invariants (tree) {
         })
       })
     } else if (r.node.type === 1) {
+      if (r.node.points.length > 4) {
+        console.log('!!! too many points: ' + r.node.points.length)
+        return false
+      }
       return r.node.points.every(function (p) {
         return p.point.every(function (x, i) {
           var ok = x >= r.range[i][0] && x <= r.range[i][1]
