@@ -50,16 +50,15 @@ KDB.prototype.insert = function (pt, value) {
   var self = this
   var q = [], rec = { point: pt, value: value }
   for (var i = 0; i < pt.length; i++) q.push([pt[i],pt[i]])
-  return insert(this.root, [], -1, 0)
+  return insert(this.root, 0)
 
-  function insert (node, parents, pindex, depth) {
+  function insert (node, depth) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
         if (overlappingRange(q, r.range)) {
-          var nparents = [{ node: node, index: i }].concat(parents)
           r.node.parent = { node: node, index: i }
-          return insert(r.node, nparents, pindex+1, 0)
+          return insert(r.node, 0)
         }
       }
       throw new Error('INVALID STATE')
@@ -69,15 +68,15 @@ KDB.prototype.insert = function (pt, value) {
         return
       }
       var coords = []
-      var axis = (parents.length + 1) % pt.length
+      var axis = (depth + 1) % pt.length
       for (var i = 0; i < node.points.length; i++) {
         coords.push(node.points[i].point[axis])
       }
       var pivot = median(coords)
-      if (pindex >= parents.length) {
+      if (!node.parent) {
         throw new Error('at the root!')
-      } else if (parents[pindex].node.regions.length >= self.b) {
-        var i = pindex, p = parents[i]
+      } else if (node.parent.node.regions.length >= self.b) {
+        var p = node.parent
         while (p.node.regions.length >= self.b) {
           var right = splitRegionNode(p, pivot, axis)
           if (p.node === self.root) {
@@ -86,13 +85,13 @@ KDB.prototype.insert = function (pt, value) {
               type: REGION,
               regions: [ p, right ]
             }
-            return insert(self.root, [], -1, 0)
+            return insert(self.root, 0)
           } else {
-            p = parents[--i]
+            p.node.regions.push(right)
+            p = p.node.parent
           }
         }
-        p.node.regions.push(right)
-        insert(parents[i].node, parents, pindex+1, depth+1)
+        insert(p.node, depth+1)
       } else {
         var right = splitPointNode(node, pivot, axis)
         var pnode = node.parent.node
@@ -105,7 +104,7 @@ KDB.prototype.insert = function (pt, value) {
         var rregion = { range: rrange, node: right }
         pnode.regions[pix] = lregion
         pnode.regions.push(rregion)
-        insert(pnode, parents, pindex+1, depth+1)
+        insert(pnode, depth+1)
       }
     }
   }
