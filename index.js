@@ -50,15 +50,16 @@ KDB.prototype.insert = function (pt, value) {
   var self = this
   var q = [], rec = { point: pt, value: value }
   for (var i = 0; i < pt.length; i++) q.push([pt[i],pt[i]])
-  return insert(this.root, [], -1)
+  return insert(this.root, [], -1, 0)
 
-  function insert (node, parents, pindex) {
+  function insert (node, parents, pindex, depth) {
     if (node.type === REGION) {
       for (var i = 0; i < node.regions.length; i++) {
         var r = node.regions[i]
         if (overlappingRange(q, r.range)) {
           var nparents = [{ node: node, index: i }].concat(parents)
-          return insert(r.node, nparents, pindex+1)
+          r.node.parent = { node: node, index: i }
+          return insert(r.node, nparents, pindex+1, 0)
         }
       }
       throw new Error('INVALID STATE')
@@ -85,26 +86,26 @@ KDB.prototype.insert = function (pt, value) {
               type: REGION,
               regions: [ p, right ]
             }
-            return insert(self.root, [], -1)
+            return insert(self.root, [], -1, 0)
           } else {
             p = parents[--i]
           }
         }
         p.node.regions.push(right)
-        insert(parents[i].node, parents, pindex+1)
+        insert(parents[i].node, parents, pindex+1, depth+1)
       } else {
         var right = splitPointNode(node, pivot, axis)
-        var pnode = parents[pindex].node
-        var pix = parents[pindex].index
+        var pnode = node.parent.node
+        var pix = node.parent.index
         var lrange = clone(pnode.regions[pix].range)
         var rrange = clone(pnode.regions[pix].range)
         lrange[axis][1] = pivot
         rrange[axis][0] = pivot
         var lregion = { range: lrange, node: node }
         var rregion = { range: rrange, node: right }
-        parents[pindex].node.regions[pix] = lregion
-        parents[pindex].node.regions.push(rregion)
-        insert(parents[pindex].node, parents, pindex+1)
+        pnode.regions[pix] = lregion
+        pnode.regions.push(rregion)
+        insert(pnode, parents, pindex+1, depth+1)
       }
     }
   }
