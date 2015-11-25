@@ -75,9 +75,9 @@ KDB.prototype.insert = function (pt, value) {
       var pivot = median(coords)
       if (!node.parent) {
         throw new Error('at the root!')
-      } else if (node.parent.node.regions.length >= self.b) {
+      } else if (node.parent.node.regions.length >= self.b - 1) {
         var p = node.parent
-        while (p.node.regions.length >= self.b) {
+        while (p.node.regions.length >= self.b - 1) {
           var right = splitRegionNode(p, pivot, axis)
           if (p.node === self.root) {
             p.range = regionRange(self.dim, p.node.regions)
