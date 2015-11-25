@@ -16,7 +16,7 @@ test('invariants', function (t) {
     t.deepEqual(pts, [ { point: [x,y,z], value: loc } ])
     var ok = invariants(kdb.root)
     t.ok(ok, 'invariants')
-    if (!ok) console.log(require('util').inspect(kdb.root,0,2000))
+    //if (!ok) console.log(require('util').inspect(kdb.root,0,2000))
   }
 
   var pts = kdb.query([[15,50],[-60,10],[50,100]])
