@@ -58,7 +58,7 @@ KDB.prototype.insert = function (pt, value) {
         var r = node.regions[i]
         if (overlappingRange(q, r.range)) {
           r.node.parent = { node: node, index: i }
-          return insert(r.node, 0)
+          return insert(r.node, depth + 1)
         }
       }
       throw new Error('INVALID STATE')
